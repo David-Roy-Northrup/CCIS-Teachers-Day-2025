@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Send a Message</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <header>
+    <img src="logo.png" alt="Logo">
+    <h1>Teachers' Day Message Portal</h1>
+  </header>
+
+  <div class="container">
+    <form id="messageForm">
+      <label for="teacher">Select Teacher:</label>
+      <select id="teacher" required>
+        <option value="">--Select Teacher--</option>
+        <option value="Cesar Tecson">Cesar Tecson</option>
+        <option value="Benjie Pabroa">Benjie Pabroa</option>
+        <option value="Maria Abangan">Maria Abangan</option>
+        <option value="Sergio Tecson">Sergio Tecson</option>
+        <option value="Ciemavil Alcain">Ciemavil Alcain</option>
+        <option value="Daryl Hisola">Daryl Hisola</option>
+        <option value="Frangelin Bendisula">Frangelin Bendisula</option>
+        <option value="Sanny Reñes">Sanny Reñes</option>
+        <option value="Jann Pial">Jann Pial</option>
+        <option value="Richard Florentino">Richard Florentino</option>
+        <option value="Kim Castro">Kim Castro</option>
+        <option value="Rinilgin Oplas">Rinilgin Oplas</option>
+        <option value="Bryan Maturan">Bryan Maturan</option>
+      </select>
+
+      <label for="name">Your Name (Optional):</label>
+      <input type="text" id="name" placeholder="Leave blank for anonymous">
+
+      <label for="message">Message:</label>
+      <textarea id="message" rows="4" required></textarea>
+
+      <button type="submit">Send Message</button>
+    </form>
+  </div>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "YAIzaSyA0i1QogmtAZ3nSQdM9hbdkV8xTxWWwPY0",
+      authDomain: "redpace-47f63.firebaseapp.com",
+      projectId: "redpace-47f63",
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Form submission
+    document.getElementById("messageForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      let teacher = document.getElementById("teacher").value;
+      let name = document.getElementById("name").value.trim();
+      let message = document.getElementById("message").value.trim();
+
+      if (!teacher || !message) {
+        alert("⚠️ Please fill in both teacher and message.");
+        return;
+      }
+
+      if (name === "") {
+        name = "anonymous";
+      }
+
+      try {
+        await db.collection("messages").add({
+          teacher: teacher,
+          name: name,
+          message: message,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert("✅ Message sent successfully!");
+        document.getElementById("messageForm").reset();
+      } catch (error) {
+        console.error("Error sending message: ", error);
+        alert("❌ Failed to send message. Please try again.");
+      }
+    });
+  </script>
+</body>
+</html>
