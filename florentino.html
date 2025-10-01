@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Messages for Richard Florentino</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Firebase v10+ SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+    import { getFirestore, collection, query, where, orderBy, getDocs }
+      from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA0i1QogmtAZ3nSQdM9hbdkV8xTxWWwPY0",
+      authDomain: "redpace-47f63.firebaseapp.com",
+      databaseURL: "https://redpace-47f63-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "redpace-47f63",
+      storageBucket: "redpace-47f63.firebasestorage.app",
+      messagingSenderId: "436827373816",
+      appId: "1:436827373816:web:40fadfd3a35ecb5e897b0d",
+      measurementId: "G-EJ4EPRZSLF"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const teacher = "Richard Florentino";
+
+    let currentPage = 0;
+    const pageSize = 5;
+    let messages = [];
+
+    let messagesDiv;
+    let prevBtn;
+    let nextBtn;
+    let pageNumber;
+    let loadingDiv;
+
+    function getTsMillis(ts) {
+      if (!ts) return 0;
+      if (typeof ts.toMillis === "function") return ts.toMillis();
+      if (typeof ts.toDate === "function") return ts.toDate().getTime();
+      if (ts.seconds !== undefined) {
+        return ts.seconds * 1000 + Math.floor((ts.nanoseconds || 0) / 1e6);
+      }
+      if (typeof ts === "number") return ts;
+      const parsed = Date.parse(String(ts));
+      return isNaN(parsed) ? 0 : parsed;
+    }
+
+    async function loadMessages() {
+      showLoading(true);
+      try {
+        const q = query(
+          collection(db, "messages"),
+          where("teacher", "==", teacher),
+          orderBy("timestamp", "desc")
+        );
+        const snapshot = await getDocs(q);
+        messages = snapshot.docs.map(doc => doc.data());
+        messages.sort((a, b) => getTsMillis(b.timestamp) - getTsMillis(a.timestamp));
+        renderPage();
+      } catch (err) {
+        console.warn("Server-side order failed, fallback to client-side sort:", err);
+        try {
+          const q2 = query(
+            collection(db, "messages"),
+            where("teacher", "==", teacher)
+          );
+          const snapshot2 = await getDocs(q2);
+          messages = snapshot2.docs.map(doc => doc.data());
+          messages.sort((a, b) => getTsMillis(b.timestamp) - getTsMillis(a.timestamp));
+          renderPage();
+        } catch (err2) {
+          console.error("⚠️ Error loading messages:", err2);
+          messagesDiv.innerHTML = "<p>Error loading messages. Check console.</p>";
+        }
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function renderPage() {
+      messagesDiv.innerHTML = "";
+      const start = currentPage * pageSize;
+      const end = start + pageSize;
+      const pageMessages = messages.slice(start, end);
+
+      if (pageMessages.length === 0 && messages.length === 0) {
+        messagesDiv.innerHTML = "<p>No messages yet.</p>";
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        pageNumber.textContent = "";
+        return;
+      }
+
+      pageMessages.forEach(msg => {
+        const card = document.createElement("div");
+        card.className = "message-card";
+        card.innerHTML = `
+          <p>${escapeHtml(String(msg.message || ""))}</p>
+          <div class="sender">- ${escapeHtml(String(msg.name || ""))}</div>
+        `;
+        messagesDiv.appendChild(card);
+      });
+
+      prevBtn.disabled = currentPage === 0;
+      nextBtn.disabled = (currentPage + 1) * pageSize >= messages.length;
+
+      const totalPages = Math.ceil(messages.length / pageSize);
+      pageNumber.textContent = `${currentPage + 1}/${totalPages}`;
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function showLoading(isLoading) {
+      if (isLoading) {
+        loadingDiv.style.display = "block";
+        messagesDiv.style.display = "none";
+      } else {
+        loadingDiv.style.display = "none";
+        messagesDiv.style.display = "block";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      messagesDiv = document.getElementById("messages");
+      prevBtn = document.getElementById("prevBtn");
+      nextBtn = document.getElementById("nextBtn");
+      pageNumber = document.getElementById("pageNumber");
+      loadingDiv = document.getElementById("loading");
+
+      prevBtn.addEventListener("click", () => {
+        if (currentPage > 0) {
+          currentPage--;
+          renderPage();
+        }
+      });
+
+      nextBtn.addEventListener("click", () => {
+        if ((currentPage + 1) * pageSize < messages.length) {
+          currentPage++;
+          renderPage();
+        }
+      });
+
+      loadMessages();
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <img src="logo.png" alt="Logo" />
+    <h1>Sir Richard</h1>
+  </header>
+
+  <div class="container">
+    <!-- ✅ Loading Screen -->
+    <div id="loading">Loading messages...</div>
+
+    <div id="messages"></div>
+    <div class="pagination">
+      <button id="prevBtn" disabled>Previous</button>
+      <span id="pageNumber"></span>
+      <button id="nextBtn">Next</button>
+    </div>
+  </div>
+</body>
+</html>
