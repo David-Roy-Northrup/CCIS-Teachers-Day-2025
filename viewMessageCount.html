@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Message Count per Teacher</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Firebase v10+ SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+    import { getFirestore, collection, getDocs }
+      from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA0i1QogmtAZ3nSQdM9hbdkV8xTxWWwPY0",
+      authDomain: "redpace-47f63.firebaseapp.com",
+      projectId: "redpace-47f63",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadCounts() {
+      const snapshot = await getDocs(collection(db, "messages"));
+      const counts = {};
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const teacher = data.teacher || "Unknown";
+        counts[teacher] = (counts[teacher] || 0) + 1;
+      });
+
+      renderTable(counts);
+    }
+
+    function renderTable(counts) {
+      const tbody = document.getElementById("countsBody");
+      tbody.innerHTML = "";
+
+      // Convert object to sorted array (descending by count)
+      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+      sorted.forEach(([teacher, count]) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${escapeHtml(teacher)}</td>
+          <td>${count}</td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      if (sorted.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='2'>No messages found.</td></tr>";
+      }
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadCounts();
+    });
+  </script>
+
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 0.75rem;
+      text-align: left;
+    }
+    th {
+      background: #f4f4f4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <table>
+      <thead>
+        <tr>
+          <th>Teacher</th>
+          <th>Number of Messages</th>
+        </tr>
+      </thead>
+      <tbody id="countsBody">
+        <tr><td colspan="2">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
