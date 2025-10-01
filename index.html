@@ -40,14 +40,14 @@
       <label for="message">Message:</label>
       <textarea id="message" rows="4" required></textarea>
 
-      <button type="submit">Send Message</button>
+      <button type="submit" id="sendBtn">Send Message</button>
     </form>
   </div>
 
   <script>
     // Firebase config
     const firebaseConfig = {
-      apiKey: "YAIzaSyA0i1QogmtAZ3nSQdM9hbdkV8xTxWWwPY0",
+      apiKey: "AIzaSyA0i1QogmtAZ3nSQdM9hbdkV8xTxWWwPY0",
       authDomain: "redpace-47f63.firebaseapp.com",
       projectId: "redpace-47f63",
     };
@@ -56,8 +56,11 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    const form = document.getElementById("messageForm");
+    const sendBtn = document.getElementById("sendBtn");
+
     // Form submission
-    document.getElementById("messageForm").addEventListener("submit", async (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       let teacher = document.getElementById("teacher").value;
@@ -73,22 +76,37 @@
         name = "anonymous";
       }
 
+      // Disable button during submission
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Sending...";
+
       try {
-        await db.collection("messages").add({
+        const docRef = await db.collection("messages").add({
           teacher: teacher,
           name: name,
           message: message,
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        alert("✅ Message sent successfully!");
-        document.getElementById("messageForm").reset();
+        // Fetch the document back to get resolved server timestamp
+        const savedDoc = await docRef.get();
+        const ts = savedDoc.data().timestamp?.toDate();
+
+        let formattedTime = ts
+          ? ts.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })
+          : "unknown time";
+
+        alert(`✅ Message sent successfully!\nMessage sent to ${teacher} at ${formattedTime}`);
+        form.reset();
       } catch (error) {
         console.error("Error sending message: ", error);
         alert("❌ Failed to send message. Please try again.");
+      } finally {
+        // Re-enable button after confirmation
+        sendBtn.disabled = false;
+        sendBtn.textContent = "Send Message";
       }
     });
   </script>
 </body>
 </html>
-
