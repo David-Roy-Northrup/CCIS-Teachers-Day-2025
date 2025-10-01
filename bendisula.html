@@ -106,7 +106,7 @@
 
       // ✅ Update page number text
       const totalPages = Math.ceil(messages.length / pageSize);
-      pageNumber.textContent = `Page ${currentPage + 1} of ${totalPages}`;
+      pageNumber.textContent = `${currentPage + 1}/${totalPages}`;
     }
 
     function escapeHtml(str) {
