@@ -1,5 +1,8 @@
 /* style.css - Modern Teachers' Day Theme */
 
+/* Import cursive-like font */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&display=swap');
+
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
@@ -22,7 +25,8 @@ header img {
 }
 
 header h1 {
-  font-size: 1.8rem;
+  font-family: 'Dancing Script', cursive; /* ✨ Cursive-like font */
+  font-size: 2.2rem;
   margin: 0;
 }
 
@@ -120,7 +124,7 @@ form button:hover {
 /* 📱 Mobile Friendly */
 @media (max-width: 600px) {
   header h1 {
-    font-size: 1.2rem;
+    font-size: 1.6rem;
   }
   .container {
     margin: 5%;
