@@ -35,6 +35,7 @@
     let prevBtn;
     let nextBtn;
     let pageNumber;
+    let loadingDiv;
 
     function getTsMillis(ts) {
       if (!ts) return 0;
@@ -49,6 +50,7 @@
     }
 
     async function loadMessages() {
+      showLoading(true);
       try {
         const q = query(
           collection(db, "messages"),
@@ -74,6 +76,8 @@
           console.error("⚠️ Error loading messages:", err2);
           messagesDiv.innerHTML = "<p>Error loading messages. Check console.</p>";
         }
+      } finally {
+        showLoading(false);
       }
     }
 
@@ -104,7 +108,6 @@
       prevBtn.disabled = currentPage === 0;
       nextBtn.disabled = (currentPage + 1) * pageSize >= messages.length;
 
-      // ✅ Update page number text
       const totalPages = Math.ceil(messages.length / pageSize);
       pageNumber.textContent = `${currentPage + 1}/${totalPages}`;
     }
@@ -118,11 +121,22 @@
         .replace(/'/g, "&#039;");
     }
 
+    function showLoading(isLoading) {
+      if (isLoading) {
+        loadingDiv.style.display = "block";
+        messagesDiv.style.display = "none";
+      } else {
+        loadingDiv.style.display = "none";
+        messagesDiv.style.display = "block";
+      }
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       messagesDiv = document.getElementById("messages");
       prevBtn = document.getElementById("prevBtn");
       nextBtn = document.getElementById("nextBtn");
       pageNumber = document.getElementById("pageNumber");
+      loadingDiv = document.getElementById("loading");
 
       prevBtn.addEventListener("click", () => {
         if (currentPage > 0) {
@@ -149,6 +163,9 @@
   </header>
 
   <div class="container">
+    <!-- ✅ Loading Screen -->
+    <div id="loading">Loading messages...</div>
+
     <div id="messages"></div>
     <div class="pagination">
       <button id="prevBtn" disabled>Previous</button>
